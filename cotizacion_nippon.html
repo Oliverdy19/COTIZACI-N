@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talleres NIPPON – Cotización</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --gold: #C8A84B;
+    --gold-light: #E4C76B;
+    --gold-dark: #9A7A28;
+    --black: #0D0D0D;
+    --white: #FAFAF8;
+    --gray: #2A2A2A;
+    --gray-light: #F4F0E8;
+    --text-muted: #888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: #1a1612;
+    min-height: 100vh;
+    color: var(--black);
+  }
+
+  /* ── APP SHELL ── */
+  .app-bg {
+    background: radial-gradient(ellipse at 20% 20%, #2a220e 0%, #1a1612 60%);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .app-header {
+    text-align: center;
+    margin-bottom: 36px;
+    color: var(--gold);
+  }
+  .app-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 0.12em;
+    color: var(--gold-light);
+    text-shadow: 0 0 40px rgba(200,168,75,0.3);
+  }
+  .app-header p {
+    font-size: 0.8rem;
+    color: var(--gold-dark);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: #fff;
+    border-radius: 4px;
+    border-top: 6px solid var(--gold);
+    padding: 32px 36px;
+    margin-bottom: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .form-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-dark);
+    border-bottom: 1px solid #e0d8c0;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .form-grid.two { grid-template-columns: 1fr 1fr; }
+
+  .field label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    border: 1.5px solid #ddd;
+    border-radius: 3px;
+    padding: 9px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.88rem;
+    color: var(--black);
+    background: var(--gray-light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200,168,75,0.15);
+    background: #fff;
+  }
+  .field textarea { resize: vertical; min-height: 64px; }
+
+  /* ── ITEMS TABLE ── */
+  .items-section { margin-bottom: 24px; }
+
+  .items-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 48px;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--gold);
+    border-radius: 3px 3px 0 0;
+  }
+  .items-header span {
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .items-header span:not(:first-child) { text-align: center; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 48px;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+    background: #fff;
+    transition: background 0.15s;
+  }
+  .item-row:hover { background: #fffdf5; }
+
+  .item-row input {
+    border: 1.5px solid #e0e0e0;
+    border-radius: 3px;
+    padding: 7px 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.82rem;
+    width: 100%;
+    background: var(--gray-light);
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+  }
+  .item-row input:first-child { text-align: left; }
+  .item-row input:focus { border-color: var(--gold); background: #fff; }
+
+  .item-total {
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--gold-dark);
+  }
+
+  .btn-del {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-del:hover { color: #e74c3c; }
+
+  .btn-add-row {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--gold);
+    border-top: none;
+    background: #fffef8;
+    color: var(--gold-dark);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 0 0 3px 3px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-add-row:hover { background: var(--gold); color: #fff; }
+
+  /* ── TOTALS ── */
+  .totals-box {
+    margin-left: auto;
+    width: 300px;
+    border: 1.5px solid #e0d8c0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e0d8c0;
+    font-size: 0.85rem;
+  }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-row .lbl { color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .totals-row .val { font-weight: 700; color: var(--black); }
+  .totals-row.highlight { background: var(--gold); }
+  .totals-row.highlight .lbl, .totals-row.highlight .val { color: #fff; font-size: 0.9rem; font-weight: 900; }
+  .totals-row.sub-highlight { background: #fffbee; }
+  .totals-row.sub-highlight .lbl { color: var(--gold-dark); }
+  .totals-row.sub-highlight .val { color: var(--gold-dark); font-size: 0.92rem; }
+
+  /* ── ACTIONS ── */
+  .actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 13px 28px;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary { background: var(--gold); color: #fff; box-shadow: 0 4px 20px rgba(200,168,75,0.4); }
+  .btn-primary:hover { background: var(--gold-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,168,75,0.5); }
+  .btn-secondary { background: var(--black); color: var(--gold); border: 2px solid var(--gold); }
+  .btn-secondary:hover { background: var(--gold); color: #fff; transform: translateY(-2px); }
+  .btn-ghost { background: transparent; color: #aaa; border: 1.5px solid #ddd; }
+  .btn-ghost:hover { border-color: #aaa; color: #666; }
+
+  /* ── PREVIEW ── */
+  #preview-wrapper {
+    display: none;
+    background: #1a1612;
+    padding: 24px 0 40px;
+  }
+  #preview-wrapper.visible { display: block; }
+  .preview-label {
+    text-align: center;
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 20px;
+  }
+
+  /* ── PDF TEMPLATE ── */
+  #pdf-template {
+    width: 794px;
+    min-height: 1120px;
+    margin: 0 auto;
+    background: #fff;
+    font-family: 'Montserrat', sans-serif;
+    padding: 0;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+
+  .pdf-top {
+    background: var(--gold);
+    padding: 28px 40px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .pdf-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .pdf-logo-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .pdf-logo-icon svg { width: 34px; height: 34px; }
+  .pdf-brand { color: #fff; }
+  .pdf-brand .name { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 1; letter-spacing: 0.08em; }
+  .pdf-brand .sub { font-size: 0.72rem; letter-spacing: 0.2em; opacity: 0.85; }
+  .pdf-contact { text-align: right; color: #fff; font-size: 0.72rem; line-height: 1.8; opacity: 0.9; }
+
+  .pdf-cotizacion-label {
+    background: var(--black);
+    color: var(--gold);
+    text-align: right;
+    padding: 10px 40px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.25em;
+  }
+
+  .pdf-meta {
+    display: flex;
+    gap: 0;
+    padding: 20px 40px;
+    border-bottom: 2px solid var(--gold);
+  }
+  .pdf-meta-block { flex: 1; }
+  .pdf-meta-block + .pdf-meta-block { border-left: 1px solid #ddd; padding-left: 24px; margin-left: 24px; }
+  .pdf-meta-block label { display: block; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; }
+  .pdf-meta-block span { font-size: 0.88rem; font-weight: 700; color: var(--black); }
+
+  .pdf-desc {
+    padding: 12px 40px 20px;
+  }
+  .pdf-desc label { font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); }
+  .pdf-desc p { font-size: 0.88rem; color: var(--black); margin-top: 4px; }
+
+  .pdf-table { width: 100%; border-collapse: collapse; margin: 0 0 0; }
+  .pdf-table thead tr { background: var(--gold); }
+  .pdf-table thead th {
+    padding: 10px 14px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: left;
+  }
+  .pdf-table thead th:not(:first-child) { text-align: center; }
+  .pdf-table tbody tr { border-bottom: 1px solid #ede8d8; }
+  .pdf-table tbody tr:nth-child(even) { background: #fffcf0; }
+  .pdf-table tbody td { padding: 10px 14px; font-size: 0.84rem; color: var(--black); }
+  .pdf-table tbody td:not(:first-child) { text-align: center; }
+  .pdf-table tbody td.total-col { font-weight: 700; color: var(--gold-dark); }
+
+  .pdf-totals-section {
+    display: flex;
+    justify-content: flex-end;
+    padding: 24px 40px;
+  }
+  .pdf-totals-table { width: 280px; border-collapse: collapse; }
+  .pdf-totals-table tr td { padding: 8px 14px; font-size: 0.82rem; border-bottom: 1px solid #ede8d8; }
+  .pdf-totals-table tr td:first-child { color: var(--text-muted); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .pdf-totals-table tr td:last-child { font-weight: 700; text-align: right; }
+  .pdf-totals-table tr.row-total td { background: var(--gold); color: #fff; font-weight: 900; font-size: 0.92rem; }
+  .pdf-totals-table tr.row-initial td { background: #fffbee; }
+  .pdf-totals-table tr.row-initial td:first-child { color: var(--gold-dark); }
+  .pdf-totals-table tr.row-initial td:last-child { color: var(--gold-dark); }
+  .pdf-totals-table tr.row-final td { background: #fffbee; }
+  .pdf-totals-table tr.row-final td:first-child { color: var(--gold-dark); }
+  .pdf-totals-table tr.row-final td:last-child { color: var(--gold-dark); }
+
+  .pdf-signatures {
+    display: flex;
+    gap: 48px;
+    padding: 20px 40px 40px;
+    margin-top: auto;
+  }
+  .pdf-sig-block { flex: 1; }
+  .pdf-sig-line { border-top: 1.5px solid var(--black); margin-bottom: 6px; }
+  .pdf-sig-block p { font-size: 0.72rem; color: var(--text-muted); text-align: center; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* loading spinner */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.two { grid-template-columns: 1fr; }
+    .form-card { padding: 20px 16px; }
+    .items-header, .item-row { grid-template-columns: 2fr 1fr 1fr; }
+    .items-header span:nth-child(4), .item-row .item-total,
+    .items-header span:nth-child(5), .item-row .btn-del { display: none; }
+    .totals-box { width: 100%; }
+    #pdf-template { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-bg">
+  <div class="app-header">
+    <h1>TALLERES NIPPON</h1>
+    <p>Sistema de Cotización</p>
+  </div>
+
+  <div class="container">
+
+    <!-- FORM -->
+    <div class="form-card">
+      <div class="form-section-title">Información del Cliente</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha">
+        </div>
+        <div class="field">
+          <label>Vendedor</label>
+          <input type="text" id="f-vendedor" placeholder="Nombre del vendedor">
+        </div>
+        <div class="field">
+          <label>Cliente</label>
+          <input type="text" id="f-cliente" placeholder="Nombre del cliente">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:24px">
+        <label>Descripción del Proyecto</label>
+        <textarea id="f-descripcion" placeholder="Describa el proyecto aquí..."></textarea>
+      </div>
+
+      <div class="form-section-title">Productos / Servicios</div>
+      <div class="items-section">
+        <div class="items-header">
+          <span>Producto</span>
+          <span>Cantidad</span>
+          <span>Precio Unit.</span>
+          <span>Total</span>
+          <span></span>
+        </div>
+        <div id="items-body"></div>
+        <button class="btn-add-row" onclick="addRow()">＋ Agregar Ítem</button>
+      </div>
+
+      <!-- Totals -->
+      <div class="totals-box">
+        <div class="totals-row">
+          <span class="lbl">Sub-total</span>
+          <span class="val" id="t-subtotal">RD$ 0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="lbl">ITBIS (18%)</span>
+          <span class="val" id="t-itbis">RD$ 0.00</span>
+        </div>
+        <div class="totals-row sub-highlight">
+          <span class="lbl">60% Inicial</span>
+          <span class="val" id="t-inicial">RD$ 0.00</span>
+        </div>
+        <div class="totals-row sub-highlight">
+          <span class="lbl">40% Final</span>
+          <span class="val" id="t-final">RD$ 0.00</span>
+        </div>
+        <div class="totals-row highlight">
+          <span class="lbl">TOTAL</span>
+          <span class="val" id="t-total">RD$ 0.00</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-primary" onclick="previewCotizacion()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Vista Previa
+        </button>
+        <button class="btn btn-secondary" id="btn-pdf" onclick="exportPDF()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Exportar PDF
+          <div class="spinner" id="pdf-spinner"></div>
+        </button>
+        <button class="btn btn-ghost" onclick="clearForm()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview-wrapper">
+      <div class="preview-label">▸ VISTA PREVIA DE LA COTIZACIÓN</div>
+      <div id="pdf-template">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  let rows = [];
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('f-fecha').value = today;
+    // Add 3 default rows
+    addRow(); addRow(); addRow();
+  });
+
+  // ── Rows ──
+  function addRow() {
+    const id = Date.now() + Math.random();
+    rows.push({ id, producto: '', cantidad: '', precio: '' });
+    renderRows();
+  }
+
+  function removeRow(id) {
+    rows = rows.filter(r => r.id !== id);
+    renderRows();
+    calcTotals();
+  }
+
+  function updateRow(id, field, value) {
+    const row = rows.find(r => r.id === id);
+    if (row) { row[field] = value; calcTotals(); }
+  }
+
+  function renderRows() {
+    const body = document.getElementById('items-body');
+    body.innerHTML = rows.map(r => `
+      <div class="item-row">
+        <input type="text" placeholder="Descripción del producto..."
+          value="${escHtml(r.producto)}"
+          oninput="updateRow(${r.id}, 'producto', this.value)">
+        <input type="text" placeholder="ej: 60p2"
+          value="${escHtml(r.cantidad)}"
+          oninput="updateRow(${r.id}, 'cantidad', this.value)"
+          style="text-align:center">
+        <input type="number" placeholder="0.00"
+          value="${r.precio}"
+          oninput="updateRow(${r.id}, 'precio', this.value)"
+          style="text-align:center">
+        <div class="item-total">${rowTotal(r)}</div>
+        <button class="btn-del" onclick="removeRow(${r.id})" title="Eliminar">✕</button>
+      </div>
+    `).join('');
+    calcTotals();
+  }
+
+  function rowTotal(r) {
+    const qty = parseFloat(r.cantidad) || 0;
+    const price = parseFloat(r.precio) || 0;
+    // if quantity has text (like 60p2), treat as 1 unit
+    const numQty = qty || (r.cantidad ? 1 : 0);
+    const t = numQty * price;
+    return t > 0 ? fmt(t) : '–';
+  }
+
+  function rowTotalNum(r) {
+    const qtyStr = r.cantidad || '';
+    const numQty = parseFloat(qtyStr) || (qtyStr ? 1 : 0);
+    const price = parseFloat(r.precio) || 0;
+    return numQty * price;
+  }
+
+  // ── Calc ──
+  function calcTotals() {
+    const subtotal = rows.reduce((s, r) => s + rowTotalNum(r), 0);
+    const itbis = subtotal * 0.18;
+    const total = subtotal + itbis;
+    const inicial = total * 0.60;
+    const final = total * 0.40;
+
+    document.getElementById('t-subtotal').textContent = 'RD$ ' + fmt(subtotal);
+    document.getElementById('t-itbis').textContent = 'RD$ ' + fmt(itbis);
+    document.getElementById('t-inicial').textContent = 'RD$ ' + fmt(inicial);
+    document.getElementById('t-final').textContent = 'RD$ ' + fmt(final);
+    document.getElementById('t-total').textContent = 'RD$ ' + fmt(total);
+  }
+
+  // ── Preview ──
+  function previewCotizacion() {
+    buildPDFTemplate();
+    const wrap = document.getElementById('preview-wrapper');
+    wrap.classList.add('visible');
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function buildPDFTemplate() {
+    const fecha = document.getElementById('f-fecha').value;
+    const vendedor = document.getElementById('f-vendedor').value || '_______________';
+    const cliente = document.getElementById('f-cliente').value || '_______________';
+    const descripcion = document.getElementById('f-descripcion').value || '';
+
+    const subtotal = rows.reduce((s, r) => s + rowTotalNum(r), 0);
+    const itbis = subtotal * 0.18;
+    const total = subtotal + itbis;
+    const inicial = total * 0.60;
+    const finalPay = total * 0.40;
+
+    const rowsHtml = rows.filter(r => r.producto || r.precio).map(r => `
+      <tr>
+        <td>${escHtml(r.producto) || '–'}</td>
+        <td>${escHtml(r.cantidad) || '–'}</td>
+        <td>${r.precio ? fmt(parseFloat(r.precio)) : '–'}</td>
+        <td class="total-col">${rowTotalNum(r) > 0 ? fmt(rowTotalNum(r)) : '–'}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pdf-template').innerHTML = `
+      <div class="pdf-top">
+        <div class="pdf-logo-area">
+          <div class="pdf-logo-icon">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="14" height="14" fill="#C8A84B"/>
+              <rect x="22" y="4" width="14" height="14" fill="#C8A84B"/>
+              <rect x="4" y="22" width="14" height="14" fill="#C8A84B"/>
+              <rect x="22" y="22" width="14" height="14" stroke="#C8A84B" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <div class="pdf-brand">
+            <div class="name">TALLERES<br>NIPPON</div>
+          </div>
+        </div>
+        <div class="pdf-contact">
+          C/ Luis E. del Monte No. 94 A<br>
+          Barahona, R.D.<br>
+          CEL: (829) 273-5432<br>
+          TEL: (809) 524-1973
+        </div>
+      </div>
+      <div class="pdf-cotizacion-label">COTIZACIÓN</div>
+      <div class="pdf-meta">
+        <div class="pdf-meta-block">
+          <label>Fecha</label>
+          <span>${fecha ? formatFecha(fecha) : '___________'}</span>
+        </div>
+        <div class="pdf-meta-block">
+          <label>Vendedor</label>
+          <span>${escHtml(vendedor)}</span>
+        </div>
+        <div class="pdf-meta-block">
+          <label>Cliente</label>
+          <span>${escHtml(cliente)}</span>
+        </div>
+      </div>
+      ${descripcion ? `<div class="pdf-desc"><label>Descripción del Proyecto</label><p>${escHtml(descripcion)}</p></div>` : ''}
+      <table class="pdf-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th style="text-align:center">Cantidad</th>
+            <th style="text-align:center">Precio Unit.</th>
+            <th style="text-align:center">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml || '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Sin ítems</td></tr>'}
+        </tbody>
+      </table>
+      <div class="pdf-totals-section">
+        <table class="pdf-totals-table">
+          <tr><td>Sub-total</td><td>RD$ ${fmt(subtotal)}</td></tr>
+          <tr><td>ITBIS (18%)</td><td>RD$ ${fmt(itbis)}</td></tr>
+          <tr class="row-initial"><td>60% Inicial</td><td>RD$ ${fmt(inicial)}</td></tr>
+          <tr class="row-final"><td>40% Final</td><td>RD$ ${fmt(finalPay)}</td></tr>
+          <tr class="row-total"><td>TOTAL</td><td>RD$ ${fmt(total)}</td></tr>
+        </table>
+      </div>
+      <div class="pdf-signatures">
+        <div class="pdf-sig-block">
+          <div class="pdf-sig-line"></div>
+          <p>Firma de Cliente</p>
+        </div>
+        <div class="pdf-sig-block">
+          <div class="pdf-sig-line"></div>
+          <p>Firma de Vendedor</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Export PDF ──
+  async function exportPDF() {
+    buildPDFTemplate();
+    const wrap = document.getElementById('preview-wrapper');
+    wrap.classList.add('visible');
+
+    const btn = document.getElementById('btn-pdf');
+    const spinner = document.getElementById('pdf-spinner');
+    btn.disabled = true;
+    spinner.style.display = 'block';
+
+    await new Promise(r => setTimeout(r, 300));
+
+    try {
+      const el = document.getElementById('pdf-template');
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#fff',
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.97);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const pW = pdf.internal.pageSize.getWidth();
+      const pH = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pW) / canvas.width;
+
+      if (imgH <= pH) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pW, imgH);
+      } else {
+        // Multi-page
+        let yPos = 0;
+        while (yPos < imgH) {
+          if (yPos > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, -yPos, pW, imgH);
+          yPos += pH;
+        }
+      }
+
+      const cliente = document.getElementById('f-cliente').value || 'cotizacion';
+      const fecha = document.getElementById('f-fecha').value || 'sin-fecha';
+      pdf.save(`NIPPON_${cliente.replace(/\s+/g,'_')}_${fecha}.pdf`);
+    } catch (e) {
+      alert('Error al generar PDF: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    }
+  }
+
+  // ── Clear ──
+  function clearForm() {
+    if (!confirm('¿Limpiar todo el formulario?')) return;
+    document.getElementById('f-vendedor').value = '';
+    document.getElementById('f-cliente').value = '';
+    document.getElementById('f-descripcion').value = '';
+    rows = [];
+    addRow(); addRow(); addRow();
+    document.getElementById('preview-wrapper').classList.remove('visible');
+    calcTotals();
+  }
+
+  // ── Helpers ──
+  function fmt(n) {
+    return n.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function formatFecha(s) {
+    if (!s) return '';
+    const [y,m,d] = s.split('-');
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${d} ${meses[parseInt(m)-1]} ${y}`;
+  }
+</script>
+</body>
+</html>
